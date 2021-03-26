@@ -1,57 +1,48 @@
 package com.example.project.ecomm.ECommerce.service;
 
 import com.example.project.ecomm.ECommerce.entities.User.Address;
+import com.example.project.ecomm.ECommerce.entities.User.Customer;
+import com.example.project.ecomm.ECommerce.entities.User.Role;
 import com.example.project.ecomm.ECommerce.entities.User.Seller;
+import com.example.project.ecomm.ECommerce.exception.EmailAlreadyExistsException;
+import com.example.project.ecomm.ECommerce.repository.CustomerRepository;
 import com.example.project.ecomm.ECommerce.repository.SellerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import javax.validation.Valid;
+import java.util.Arrays;
 
 @Service
 public class SellerService
 {
+    private SellerRepository sellerRepository;
+
     @Autowired
-    SellerRepository sellerRepository;
+    private UserService userService;
 
-    public Seller addSeller(Seller seller)
+    public boolean checkIfUserExist(String email)
     {
-        Address address = seller.getAddress();
+        return sellerRepository.findByEmail(email) != null;
+    }
+
+    public void register(@Valid Seller seller) {
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        if (checkIfUserExist(seller.getEmail())) {
+            throw new EmailAlreadyExistsException("Email already registered");
+        }
+        Role role = new Role();
+        role.setAuthority("ROLE_SELLER");
+        seller.setPassword(passwordEncoder.encode(seller.getPassword()));
+        seller.setRoleList(Arrays.asList(role));
+
+        Address address= seller.getAddress();
         address.setSeller(seller);
-        return sellerRepository.save(seller);
-    }
 
-    public Seller getSeller(int id) throws Exception
-    {
-        Optional<Seller> optionalSeller;
-        optionalSeller = sellerRepository.findById(id);
-        if(optionalSeller.isPresent())
-        {
-            return optionalSeller.get();
-        }
-        else
-        {
-            throw new ChangeSetPersister.NotFoundException();
-        }
-    }
-
-    public Seller updateSeller(Seller seller)
-    {
-        return sellerRepository.save(seller);
-    }
-
-    public Seller removeSeller(int id)
-    {
-        Seller seller = sellerRepository.findById(id).get();
-        sellerRepository.delete(seller);
-
-        return seller;
-    }
-
-    public List<Seller> getAllSellers() throws Exception
-    {
-        return (List<Seller>) sellerRepository.findAll();
+        sellerRepository.save(seller);
+        userService.sendActivationLinkWithSeller(seller);
     }
 }

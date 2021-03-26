@@ -3,41 +3,29 @@ package com.example.project.ecomm.ECommerce.controller;
 import com.example.project.ecomm.ECommerce.entities.User.Customer;
 import com.example.project.ecomm.ECommerce.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.bind.annotation.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
-import java.net.URI;
-import java.util.List;
 
+@RestController
+@RequestMapping(path = "/customer")
 public class CustomerController
 {
+    private CustomerService customerService;
+
     @Autowired
-    CustomerService customerService;
-
-    @PostMapping("/addCustomer")
-    public ResponseEntity<Customer> addCustomer(@RequestBody Customer customer)
+   public CustomerController(CustomerService customerService)
     {
-        Customer customer1 = customerService.addCustomer(customer);
-        URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest().path("/{id}")
-                .buildAndExpand(customer1.getId()).toUri();
-        return ResponseEntity.created(location).build();
+        this.customerService = customerService;
     }
 
-    @GetMapping("/getCustomer/{id}")
-    public Customer getCustomer(@PathVariable int id) throws Exception {
-
-        return customerService.getCustomer(id);
-
-    }
-
-    @GetMapping("/getAllCustomers")
-    public List<Customer> getAllCustomers() throws Exception {
-
-        return customerService.getAllCustomers();
+    @PostMapping("/register")
+    public ResponseEntity<Object> registerCustomer(@RequestBody Customer customer, final HttpServletRequest request) {
+        System.out.println(customer);
+        customerService.register(customer);
+        return new ResponseEntity<>("Account successfully created... Check your mail for activation Link..", HttpStatus.OK);
     }
 }

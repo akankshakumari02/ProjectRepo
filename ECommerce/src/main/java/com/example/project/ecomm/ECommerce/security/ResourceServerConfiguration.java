@@ -51,6 +51,7 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
         http
                 .authorizeRequests()
                 .antMatchers("/").anonymous()
+                .antMatchers("/customer/register").permitAll()
                 .antMatchers("/admin/home").hasAnyRole("ADMIN")
                 .antMatchers("/customer/home").hasAnyRole("CUSTOMER")
                 .antMatchers("/seller/home").hasAnyRole("SELLER")

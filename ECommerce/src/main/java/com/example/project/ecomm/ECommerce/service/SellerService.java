@@ -71,7 +71,7 @@ public class SellerService
 
     public void register(@Valid SellerDto sellerDto) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        Seller seller = new Seller();
+        Seller seller=new Seller();
         if (checkIfUserExist(sellerDto.getEmail())) {
             throw new EmailAlreadyExistsException("Already registered Email");
         }
@@ -89,6 +89,11 @@ public class SellerService
         for (Address address : seller.getAddressList()) {
             address.setUser(seller);
         }
+        Role role = userService.getRole(UserRole.SELLER);
+        seller.getRoleList().add(role);
+        seller.setRoleList(Arrays.asList(role));
+        seller.setGst(sellerDto.getGst());
+        seller.setCompanyName(sellerDto.getCompanyName());
         sellerRepository.save(seller);
         userService.sendActivationLinkOfSeller(seller);
     }
